@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Short Polling</title>
+</head>
+<body>
+    <div id="video"></div>
+    <script srr="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        let video = null
+        let progress = 0
+        let limit = 50
+        
+        function playVideo() {
+            // ... play video
+            let player = document.getElementById("video")
+            player.innerHTML = `
+                <video controls autoplay width=600 height=450>
+                    <source src="${video}" type="video/mp4">
+                </video>
+            `
+        }
+
+        // interval check
+        const interval = setInterval(processVideo, 1000)
+
+        // logic check for request video
+        function processVideo() {
+            if (limit === 0) {
+                clearInterval(interval)
+                return
+            }
+
+            limit--
+
+            if (progress < 100) {
+                console.log(`Progress: $(progress)%`)
+                return
+            }
+
+            // ...
+            console.log(`Progress: Completed!`)
+            console.log(`Playing video...`)
+            clearInterval(interval)
+            playVideo()
+        }
+
+        axios.get("http://localhost:4000/public/video.mp4", {
+            responseType: "blob",
+            onDownloadProgress: (data) => {
+                try {
+                    const total = data.total
+                    const current = data.loaded
+                    progress = Math.floor((current / total) * 100)
+                } catch (e) {
+                    console.log(e.message)
+                }
+            }
+        }).then(res => {
+            let reader = new FileReader()
+            reader.readAsDataURL(res.data)
+            reader.onload = () => {
+                video = reader.result
+            }
+        })
+
+    </script>
+</body>
+</html>

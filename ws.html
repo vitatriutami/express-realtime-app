@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket</title>
+</head>
+<body>
+    <select type="text" id="users"></select>
+    <input type="text" id="message" placeholder="Message...">
+    <p id="content"></p>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        let socket = io("http://localhost:4000")
+        let content = document.getElementById("content")
+        let message = document.getElementById("message")
+        let userSelect = document.getElementById("users")
+
+        let username = "anonymous"
+        try {
+            username = location.search.replace("?username=", "")
+            if (!username) {
+                location.href = "?username=anonymous"
+            }
+        } catch (e) {}
+
+        socket.on("connect", () => {
+            socket.emit("register", username)
+        })        
+
+        socket.on("new.user", users => {
+            console.log(users)
+            userSelect.innerHTML = ""
+            for (let i in users) {
+                userSelect.innerHTML += `
+                <option value="${users[i]}">${users[i]}</option>
+                `
+            }
+        })
+
+        message.addEventListener("keydown", e => {
+            if (e.keyCode == 13) {
+                socket.emit("direct.message", {
+                    text: e.target.value,
+                    to: userSelect.value
+                })
+                e.target.value = ""
+            }
+        })
+
+        // let room = "public"
+        // try {
+        //     room = location.search.replace("?room=", "")
+        //     if (!room) {
+        //         window.location.href = "?room=public"
+        //     }
+        // } catch(e) {
+        //     console.log(e)
+        // }
+
+        // socket.on("connect", () => {
+        //     console.log("connected!")
+        // })
+
+        // // diterima oleh sender
+        // socket.on(`notif.${room}`, (data) => {
+        //     content.innerText = data
+        // })
+
+        // // diterima oleh user lain
+        // socket.on(`message.${room}`, (data) => {
+        //     content.innerText = data
+        // })
+
+        // message.addEventListener("keydown", e => {
+        //     if (e.keyCode == 13) {
+        //         socket.emit("message", {
+        //             text: e.target.value,
+        //             room: room
+        //         })
+        //         e.target.value = ""
+        //     }
+        // })
+    </script>
+</body>
+</html>
